@@ -3,20 +3,19 @@
 
 #include <stdlib.h>  // For malloc and free
 
-typedef struct 
-{
-    int stock_length;     // Fixed length of each stock piece
-    int *required_pieces; // Array of required piece lengths
-    int piece_count;      // Number of required pieces
+typedef struct {
+    int *required_pieces;
+    int piece_count;
+    int stock_length;
 } CutlistInput;
 
-typedef struct 
-{
-    int stock_used;   // Number of stock pieces used
-    int *assignments; // Array mapping each piece to a stock index
-    int waste;        // Total waste after cutting
+typedef struct {
+    int *assignments;
+    int stock_used;
+    int waste;
 } CutlistResult;
 
-CutlistResult cutlist_optimize(CutlistInput input);
+void find_best_packing(int *pieces, int piece_count, int stock_length, int *best_assignments, int *best_stock_used, int *best_waste, int *current_assignments, int *stock_remaining, int stock_used, int index);
+void optimize_cutlist(CutlistInput input, CutlistResult *result);
 
 #endif // CUTLIST_OPTIMIZER_H
