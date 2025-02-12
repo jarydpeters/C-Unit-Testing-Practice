@@ -1,4 +1,0 @@
-gcc -o test_example tests/test_example.c unity/src/unity.c -Iunity/src
-
-test_example.exe
-
