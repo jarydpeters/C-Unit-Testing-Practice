@@ -219,16 +219,16 @@ void testCutlistOptimizationWithLargeDataset(void)
 
 void testCutlistOptimizationWithVeryLargeDataset(void) 
 {
-    int required[50];
+    int required[100];
     int stockLength = 1000;
 
-    // Generate 50 random piece sizes between 10 and 250
-    for (int i = 0; i < 50; i++) 
+    // Generate 100 random piece sizes between 10 and 250
+    for (int i = 0; i < 100; i++) 
     {
         required[i] = (i % 10) * 25 + 10; // Generates a repeating pattern of values between 10 and 250
     }
 
-    CutlistInput input = {required, 50, stockLength};  
+    CutlistInput input = {required, 100, stockLength};  
 
     CutlistResult result;
     result.assignments = (int *)malloc(input.pieceCount * sizeof(int)); 
@@ -263,7 +263,7 @@ int main(void)
     RUN_TEST(testStockWasteForced);
     RUN_TEST(testPieceTooLargeCannotFit);
     RUN_TEST(testCutlistOptimizationWithLargeDataset);
-    //RUN_TEST(testCutlistOptimizationWithVeryLargeDataset);
+    RUN_TEST(testCutlistOptimizationWithVeryLargeDataset);
 
     return UNITY_END();
 }
