@@ -4,35 +4,36 @@
 #include <stdio.h>
 #include <stdlib.h>  // For malloc and free
 
+static int currentIteration = 0;
+
 typedef struct 
 {
-    int *optimal_assignments;
-    int *current_assignments;
-    int *remaining_stock_space;
-    int optimal_stock_count;
-    int optimal_waste;
-    int current_stock_count;
-    int stock_length;
-    int total_pieces;
-    int *piece_sizes;
+    int *optimalAssignments;
+    int *currentAssignments;
+    int *remainingStockSpace;
+    int optimalStockCount;
+    int optimalWaste;
+    int currentStockCount;
+    int stockLength;
+    int totalPieces;
+    int *pieceSizes;
 } PackingState;
 
 typedef struct {
-    int *required_pieces;
-    int piece_count;
-    int stock_length;
+    int *requiredPieces;
+    int pieceCount;
+    int stockLength;
 } CutlistInput;
 
 typedef struct {
     int *assignments;
-    int stock_used;
+    int stockUsed;
     int waste;
 } CutlistResult;
 
-void optimize_cutlist(CutlistInput input, CutlistResult *result);
-void find_best_packing(PackingState *state, int current_piece_index);
-void print_stock_assignments_from_state(PackingState *state);
-void print_stock_assignments(CutlistResult *result, CutlistInput input);
-
+void optimizeCutlist(CutlistInput input, CutlistResult *result);
+void findBestPacking(PackingState *state, int currentPieceIndex);
+void printStockAssignmentsFromState(PackingState *state);
+void printStockAssignments(CutlistResult *result, CutlistInput input);
 
 #endif // CUTLIST_OPTIMIZER_H
