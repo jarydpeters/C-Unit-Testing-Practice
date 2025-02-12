@@ -107,7 +107,7 @@ void find_best_packing(PackingState *state, int current_piece_index)
         return; // End this recursion branch
     }
 
-    // **Pruning: Stop early if we are already worse than the best found**
+    // Pruning: Stop early if we are already worse than the best found**
     if (state->current_stock_count >= state->optimal_stock_count) 
     {
         return;
