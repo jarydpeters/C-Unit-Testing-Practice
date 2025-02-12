@@ -1,6 +1,7 @@
 #ifndef CUTLIST_OPTIMIZER_H
 #define CUTLIST_OPTIMIZER_H
 
+#include <stdio.h>
 #include <stdlib.h>  // For malloc and free
 
 typedef struct 
@@ -28,7 +29,10 @@ typedef struct {
     int waste;
 } CutlistResult;
 
-void find_best_packing(PackingState *state, int current_piece_index);
 void optimize_cutlist(CutlistInput input, CutlistResult *result);
+void find_best_packing(PackingState *state, int current_piece_index);
+void print_stock_assignments_from_state(PackingState *state);
+void print_stock_assignments(CutlistResult *result, CutlistInput input);
+
 
 #endif // CUTLIST_OPTIMIZER_H
