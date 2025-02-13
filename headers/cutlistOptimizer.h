@@ -34,6 +34,5 @@ typedef struct {
 void optimizeCutlist(CutlistInput input, CutlistResult *result);
 void findBestPacking(PackingState *state, int currentPieceIndex);
 void printStockAssignmentsFromState(PackingState *state);
-void printStockAssignments(CutlistResult *result, CutlistInput input);
 
 #endif // CUTLIST_OPTIMIZER_H

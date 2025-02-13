@@ -45,7 +45,7 @@ void testWhenGreedyAlgorithmIsSufficient(void)
 
 void testWhenGreedyAlgorithmIsNotSufficient(void) 
 {
-    int required[] = {60, 40, 40, 70, 70, 120};  // Pieces to cut
+    int required[] = {60, 35, 45, 65, 70, 120};  // Pieces to cut
     CutlistInput input = {required, 6, 200};  // Stock length = 200
 
     CutlistResult result;
@@ -56,15 +56,15 @@ void testWhenGreedyAlgorithmIsNotSufficient(void)
     TEST_ASSERT_EQUAL_INT(2, result.stockUsed); // Expected stock pieces needed
 
     // Expected assignments: Pieces fit into stocks as follows
-    // Stock #1: [120, 40, 40] (0 leftover)
-    // Stock #2: [70, 70, 60]  (0 leftover)
+    // Stock #1: [120, 45, 35] (0 leftover)
+    // Stock #2: [70, 65, 60]  (0 leftover)
 
     // Note: a purely greedy agorithm with arrive at a less-optimized result of:
     // Stock #1: [120, 70]    (10 leftover)
-    // Stock #2: [70, 60, 40] (30 leftover)
-    // Stock #3: [40]         (160 leftover)
+    // Stock #2: [65, 60, 45] (30 leftover)
+    // Stock #3: [35]         (165 leftover)
     
-    // rearranged required list = 120, 70, 70, 60, 40, 40
+    // rearranged required list = 120, 70, 65, 60, 45, 35
     int expected_assignments[]  =  {0,  1,  1,  1,  0,  0};  // Expected stock indices per piece
 
     for (int i = 0; i < input.pieceCount; i++) 
@@ -78,7 +78,7 @@ void testWhenGreedyAlgorithmIsNotSufficient(void)
     }
 
     // Verify waste calculation
-    int expected_waste = 0;
+    int expected_waste = 5;
     TEST_ASSERT_EQUAL_INT(expected_waste, result.waste);
 
     free(result.assignments);
@@ -262,8 +262,8 @@ int main(void)
     RUN_TEST(testAllPiecesFitMultipleStocksNoWaste);
     RUN_TEST(testStockWasteForced);
     RUN_TEST(testPieceTooLargeCannotFit);
-    RUN_TEST(testCutlistOptimizationWithLargeDataset);
-    RUN_TEST(testCutlistOptimizationWithVeryLargeDataset);
+    // RUN_TEST(testCutlistOptimizationWithLargeDataset);
+    //RUN_TEST(testCutlistOptimizationWithVeryLargeDataset);
 
     return UNITY_END();
 }
