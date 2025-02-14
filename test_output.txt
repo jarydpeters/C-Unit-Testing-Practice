@@ -1,0 +1,4 @@
+Stock assignments:
+Stock #1: 100, 80
+Stock #2: 75, 50, 25
+

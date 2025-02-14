@@ -48,9 +48,9 @@ void optimizeCutlist(CutlistInput input, CutlistResult *result)
     }
 
     // Print sorted pieces
-    for (int i = 0; i < input.pieceCount; i++)
+    for (int currentPiece = 0; currentPiece < input.pieceCount; currentPiece++)
     {
-        printf("Piece %d: %d\n", i, input.requiredPieces[i]);
+        printf("Piece %d: %d\n", (currentPiece + 1), input.requiredPieces[currentPiece]);
     }
     printf("\n");
 
@@ -68,9 +68,9 @@ void optimizeCutlist(CutlistInput input, CutlistResult *result)
     }
 
     printf("\nBest Packing Found: Stock Used = %d, Waste = %d\n\n\n\n\n", result->stockUsed, result->waste);
-    printStockAssignmentsFromState(&state);
-
-    currentIteration = 0;
+    char *output = getStockAssignmentsAsString(&state);
+    printf("%s", output);
+    free(output);
 
     // Free dynamically allocated memory
     free(state.optimalAssignments);
@@ -78,14 +78,17 @@ void optimizeCutlist(CutlistInput input, CutlistResult *result)
     free(state.remainingStockSpace);
 }
 
+// Depth-First Recursive Search Traversal to find best packing of pieces onto stocks. Explores all enumerations, O(n!) runtime
 void findBestPacking(PackingState *state, int currentPieceIndex) 
 {
-    currentIteration++;
+    printf("\nFIND BEST PACKING RECURSIVE CALL\n");
 
-    // Base Case: If all pieces are assigned, evaluate solution
+    // Base Case: If all pieces have been assigned to a stock, evaluate solution for amount of stock used and total waste
     if (currentPieceIndex == state->totalPieces) 
     {
+        printf("ALL PIECES PLACED. EVALUATING SOLUTION\n\n");
         int total_waste = 0;
+        // Add up all waste on all stocks for total value
         for (int stock_index = 0; stock_index < state->currentStockCount; stock_index++) 
         {
             total_waste += state->remainingStockSpace[stock_index];
@@ -93,7 +96,7 @@ void findBestPacking(PackingState *state, int currentPieceIndex)
 
         printf("\nEvaluating solution: Stock Used = %d, Waste = %d\n\n", state->currentStockCount, total_waste);
 
-        // Update best solution if this one is better
+        // Replace existing best solution with currently evaluated solution if it has less total waste
         if (total_waste < state->optimalWaste) 
         {
             state->optimalWaste = total_waste;
@@ -104,24 +107,33 @@ void findBestPacking(PackingState *state, int currentPieceIndex)
                 state->optimalAssignments[piece_index] = state->currentAssignments[piece_index];
             }
 
+            // Print out best case every time one is found
             printf("New Best Found: Stock Used = %d, Waste = %d\n\n", state->optimalStockCount, state->optimalWaste);
-            printStockAssignmentsFromState(state);
+            char *output = getStockAssignmentsAsString(state);
+            printf("%s", output);
+            free(output);
         }
         return;
     }
+    else
+    {
+        printf("CURRENT PIECE BEING PLACED: %u\n\n", (currentPieceIndex + 1));
+    }
 
-    //Pruning: Stop early if worse than best found
+    // Pruning: Stop early if currently evaluated case is already worse than best known case
     if ((state->currentStockCount) > state->optimalStockCount) 
     {
         printf("\nCurrent case being evaluated is the same or worse than best known solution. Skipping...\n\n");
         return;
     }
 
+    // Grab size of piece currently being placed
     int current_piece_size = state->pieceSizes[currentPieceIndex];
 
-    // Try placing piece into an existing stock
-    for (int stock_index = 0; stock_index < state->currentStockCount; stock_index++) 
+    // Try placing piece into any existing stock
+    for (int stock_index = 0; (stock_index < state->currentStockCount); stock_index++) 
     {
+        // Only place piece if there's room for it in the existing stock
         if (state->remainingStockSpace[stock_index] >= current_piece_size) 
         {
             printf("%-20s | Stock #%2d | Piece #%2d (size: %3d) | Remaining Space in Stock #%2d: %3d\n",
@@ -131,15 +143,29 @@ void findBestPacking(PackingState *state, int currentPieceIndex)
             state->remainingStockSpace[stock_index] -= current_piece_size;
             state->currentAssignments[currentPieceIndex] = stock_index;
 
-            printStockAssignmentsFromState(state);
+            // Print out current state of stocks and which pieces are cut from them
+            char *output = getStockAssignmentsAsString(state);
+            printf("%s", output);
+            free(output);
 
+            // Recursive call: find placement of next piece
             findBestPacking(state, currentPieceIndex + 1);
 
-            // Backtrack
-            printf("Backtracking: Removing piece %d (size %d) from Stock #%d to try for a more optimal placement...\n", 
+            // Backtrack: Remove piece to try placing it somewhere else to see if it leads to a more efficient packing
+            printf("BACKTRACKING: Removing piece %d (size %d) from Stock #%d to try for a more optimal placement...\n", 
                    currentPieceIndex, current_piece_size, (stock_index + 1));
 
+            // Restore space on stock after having backtracked piece off of it
             state->remainingStockSpace[stock_index] += current_piece_size;
+
+            // Explicitly mark piece as unassigned
+            state->currentAssignments[currentPieceIndex] = -1;
+
+            // Print updated stock assignments AFTER removing the piece
+            printf("\nUpdated Stock Assignments after Backtracking:\n");
+            output = getStockAssignmentsAsString(state);
+            printf("%s", output);
+            free(output);
         }
     }
 
@@ -148,40 +174,71 @@ void findBestPacking(PackingState *state, int currentPieceIndex)
        "Starting new stock", (state->currentStockCount + 1), (currentPieceIndex + 1), current_piece_size,
        (state->currentStockCount + 1), (state->stockLength - current_piece_size));
 
+    // Reduce available space on new stock by length of piece added to it
     state->remainingStockSpace[state->currentStockCount] = state->stockLength - current_piece_size;
+
+    // Record current piece's stock number assignment
     state->currentAssignments[currentPieceIndex] = state->currentStockCount;
+
+    // Increase the total number of stocks used
     state->currentStockCount++;
 
+    char *output = getStockAssignmentsAsString(state);
+    printf("%s", output);
+    free(output);
+
+    // Recursive call: find placement of next piece
     findBestPacking(state, currentPieceIndex + 1);
 
-    // Backtrack: Undo new stock addition
-    printf("Backtracking: Undo addition of new stock. Closing Stock #%d (piece %d removed)...\n", 
+    // Backtrack: Remove piece to try placing it somewhere else to see if it leads to a more efficient packing. Undo new stock addition as it is now empty
+    printf("BACKTRACKING: Undo addition of new stock. Closing Stock #%d (piece %d removed)...\n", 
            state->currentStockCount, (currentPieceIndex + 1));
 
     state->currentStockCount--;
     state->remainingStockSpace[state->currentStockCount] = 0;
+
+    // Explicitly mark piece as unassigned
+    state->currentAssignments[currentPieceIndex] = -1;
+
+    // Print updated stock assignments AFTER removing the new stock
+    printf("\nUpdated Stock Assignments after Backtracking (New Stock Removal):\n");
+    output = getStockAssignmentsAsString(state);
+    printf("%s", output);
+    free(output);
 }
 
-// Function to print stock assignments from the current best state
-void printStockAssignmentsFromState(PackingState *state)
+// Function to generate stock assignments as a string
+char* getStockAssignmentsAsString(PackingState *state) 
 {
-    int stock_index;
-    printf("Stock assignments:\n");
-    for (stock_index = 0; stock_index < state->optimalStockCount; stock_index++) 
+    // Allocate a sufficiently large buffer
+    int buffer_size = 1024;
+    char *output = (char*)malloc(buffer_size);
+    if (!output) return NULL;  // Return NULL if memory allocation fails
+
+    output[0] = '\0';  // Ensure string starts empty
+    char temp[100];     // Temporary buffer for each line
+
+    strcat(output, "Stock assignments:\n");
+
+    for (int stock_index = 0; stock_index < state->currentStockCount; stock_index++) 
     {
-        printf("Stock #%d: ", stock_index + 1);
+        snprintf(temp, sizeof(temp), "Stock #%d: ", stock_index + 1);
+        strcat(output, temp);
+
         int first = 1;
         for (int piece_index = 0; piece_index < state->totalPieces; piece_index++) 
         {
             if (state->currentAssignments[piece_index] == stock_index) 
             {
-                if (!first) 
-                    printf(", ");
-                printf("%d", state->pieceSizes[piece_index]);
+                if (!first) strcat(output, ", ");
+                snprintf(temp, sizeof(temp), "%d", state->pieceSizes[piece_index]);
+                strcat(output, temp);
                 first = 0;
             }
         }
-        printf("\n");
+        strcat(output, "\n");
     }
-    printf("\n");
+
+    strcat(output, "\n");
+    return output;  // Caller must free the returned string
 }

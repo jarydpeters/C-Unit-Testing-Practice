@@ -77,7 +77,7 @@ void testWhenGreedyAlgorithmIsNotSufficient(void)
         TEST_ASSERT_EQUAL_INT(expected_assignments[i], result.assignments[i]);
     }
 
-    // Verify waste calculation
+    // Verify waste calculation: (200 - 120 - 45 - 35) + (200 - 70 - 65 - 60) = 5
     int expected_waste = 5;
     TEST_ASSERT_EQUAL_INT(expected_waste, result.waste);
 
@@ -251,6 +251,91 @@ void testCutlistOptimizationWithVeryLargeDataset(void)
     free(result.assignments);
 }
 
+void testGetStockAssignmentsAsString(void) 
+{
+    PackingState state;
+    state.totalPieces = 5;
+    state.currentStockCount = 2;
+    int piece_sizes[] = {100, 80, 75, 50, 25}; // Pieces
+    int assignments[] = {0, 0, 1, 1, 1};       // Assignments
+
+    state.pieceSizes = piece_sizes;
+    state.currentAssignments = assignments;
+
+    // Get stock assignments as a string
+    char *output = getStockAssignmentsAsString(&state);
+    TEST_ASSERT_NOT_NULL(output);  // Ensure function returned a valid string
+
+    // Expected output
+    const char *expected_output =
+        "Stock assignments:\n"
+        "Stock #1: 100, 80\n"
+        "Stock #2: 75, 50, 25\n\n";
+
+    TEST_ASSERT_EQUAL_STRING(expected_output, output);
+
+    free(output);  // Clean up allocated memory
+}
+
+void testOptimizeCutlist(void) 
+{
+    int required[] = {60, 35, 45, 65, 70, 120};  // Pieces to cut
+    CutlistInput input = {required, 6, 200};  // Stock length = 200
+
+    CutlistResult result;
+    result.assignments = (int *)malloc(input.pieceCount * sizeof(int)); // Ensure assignment memory allocation
+
+    optimizeCutlist(input, &result);
+
+    // Verify stock count
+    TEST_ASSERT_EQUAL_INT(2, result.stockUsed); // Expected stock pieces needed
+
+    // Verify waste calculation: (200 - 120 - 45 - 35) + (200 - 70 - 65 - 60) = 5
+    int expected_waste = 5;
+    TEST_ASSERT_EQUAL_INT(expected_waste, result.waste);
+
+    // Expected assignments: Pieces fit into stocks as follows
+    // Stock #1: [120, 45, 35] (0 leftover)
+    // Stock #2: [70, 65, 60]  (0 leftover)
+    
+    // rearranged required list = 120, 70, 65, 60, 45, 35
+    int expected_assignments[]  =  {0,  1,  1,  1,  0,  0};  // Expected stock indices per piece
+
+    for (int i = 0; i < input.pieceCount; i++) 
+    {
+        TEST_ASSERT_EQUAL_INT(expected_assignments[i], result.assignments[i]);
+    }
+
+    free(result.assignments);
+
+    for (int i = 0; i < input.pieceCount; i++) 
+    {
+        if (expected_assignments[i] != result.assignments[i]) 
+        {
+            printf("Mismatch at index %d: expected %d, got %d\n", 
+                i, expected_assignments[i], result.assignments[i]);
+        }
+        TEST_ASSERT_EQUAL_INT(expected_assignments[i], result.assignments[i]);
+    }
+}
+
+void testPieceTooLarge(void) 
+{
+    int required[] = {250};  // Piece too large for stock
+    CutlistInput input = {required, 1, 200};  // Stock length = 200
+
+    CutlistResult result;
+    result.assignments = (int *)malloc(input.pieceCount * sizeof(int));
+
+    optimizeCutlist(input, &result);
+
+    // Expect failure flag values (-1)
+    TEST_ASSERT_EQUAL_INT(-1, result.stockUsed);
+    TEST_ASSERT_EQUAL_INT(-1, result.waste);
+
+    free(result.assignments);
+}
+
 int main(void) 
 {
     UNITY_BEGIN();
@@ -263,7 +348,11 @@ int main(void)
     RUN_TEST(testStockWasteForced);
     RUN_TEST(testPieceTooLargeCannotFit);
     // RUN_TEST(testCutlistOptimizationWithLargeDataset);
-    //RUN_TEST(testCutlistOptimizationWithVeryLargeDataset);
+    // RUN_TEST(testCutlistOptimizationWithVeryLargeDataset);
+
+    RUN_TEST(testGetStockAssignmentsAsString);
+    RUN_TEST(testOptimizeCutlist);
+    RUN_TEST(testPieceTooLarge);
 
     return UNITY_END();
 }

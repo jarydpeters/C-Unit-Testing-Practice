@@ -3,8 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>  // For malloc and free
-
-static int currentIteration = 0;
+#include <string.h>
 
 typedef struct 
 {
@@ -33,6 +32,6 @@ typedef struct {
 
 void optimizeCutlist(CutlistInput input, CutlistResult *result);
 void findBestPacking(PackingState *state, int currentPieceIndex);
-void printStockAssignmentsFromState(PackingState *state);
+char* getStockAssignmentsAsString(PackingState *state);
 
 #endif // CUTLIST_OPTIMIZER_H
